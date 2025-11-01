@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>👻 에코 점퍼 (v4.0)</title>
+    <title>👻 에코 점퍼 (v5.1 - Elite Mobs)</title>
     <style>
         /* --- 기본 및 레이아웃 --- */
         html, body {
@@ -30,6 +30,7 @@
             overflow: hidden;
             background-color: #2a2a3e; /* 묘지 배경색 */
             border: 2px solid #50507a;
+            transition: background-color 0.1s; /* 레벨업 플래시용 */
         }
 
         #game-canvas {
@@ -97,6 +98,40 @@
             transition: transform 0.2s ease;
             z-index: 6;
         }
+        
+        /* 영혼 핵 HP 바 */
+        #core-hp-container {
+            position: absolute;
+            top: 45px; /* 상단 UI 아래 */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            text-align: center;
+            z-index: 5;
+            pointer-events: none;
+        }
+        
+        #core-hp-container div {
+            font-size: 1em;
+            font-weight: bold;
+            color: #FF00FF; /* 마젠타색 */
+            text-shadow: 1px 1px #000;
+        }
+        
+        #core-hp-bar-outer {
+            width: 100%;
+            height: 10px;
+            border: 2px solid #FF00FF;
+            background-color: #333;
+        }
+        
+        #core-hp-bar-inner {
+            width: 100%;
+            height: 100%;
+            background-color: #FF00FF;
+            transition: width 0.2s;
+        }
+
 
         /* --- 오버레이 공통 --- */
         .overlay {
@@ -106,16 +141,14 @@
             height: 100%;
             background-color: rgba(10, 10, 20, 0.95);
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
             transition: opacity 0.3s ease, visibility 0.3s;
             visibility: hidden;
             opacity: 0;
             z-index: 10;
-            padding: 20px; /* ◀◀◀ 추가 */
-            box-sizing: border-box; /* ◀◀◀ 추가 (매우 중요) */
         }
 
         .overlay.visible {
@@ -123,7 +156,6 @@
             opacity: 1;
         }
         
-        /* 오버레이 내부 콘텐츠 래퍼 */
         #overlay-content-wrapper {
             display: flex;
             flex-direction: column;
@@ -132,14 +164,14 @@
             text-align: center;
             width: 100%;
             height: 100%;
-            max-height: 90%; /* 콘텐츠가 너무 길어지는 것 방지 */
-            overflow: hidden; /* 내부 스크롤은 #instructions가 담당 */
+            max-height: 90%; 
+            overflow: hidden; 
         }
 
 
         /* --- 시작/종료 오버레이 --- */
         #game-overlay h1 {
-            color: #00FFFF; /* 네온 시안 */
+            color: #00FFFF; 
             margin-bottom: 10px;
             flex-shrink: 0;
         }
@@ -157,7 +189,7 @@
             color: #1a1a2e;
             background-color: #00FFFF;
             border: 2px solid #fff;
-            border-radius: 0; /* 픽셀 스타일 */
+            border-radius: 0; 
             cursor: pointer;
             box-shadow: 0 0 20px #00FFFF;
             margin-top: 20px;
@@ -167,7 +199,7 @@
         #final-score {
             font-size: 1.5em;
             font-weight: bold;
-            color: #FF00FF; /* 네온 마젠타 */
+            color: #FF00FF; 
             margin: 10px 0;
             flex-shrink: 0;
         }
@@ -178,7 +210,6 @@
             margin: 0;
         }
         
-        /* 정보 버튼 (복구) */
         #info-button {
             position: absolute;
             top: 15px;
@@ -194,19 +225,19 @@
             z-index: 11;
         }
         
-        /* 상세 '게임 방법' UI (복구) */
+        /* '게임 방법' UI */
         #instructions {
-            display: none; /* 평소엔 숨김 */
-            flex-grow: 1; /* 남는 공간을 모두 차지 */
+            display: none; 
+            flex-grow: 1; 
             width: 100%;
-            max-width: 400px; /* 가독성 위한 최대 너비 */
-            overflow-y: auto; /* *** 여기가 스크롤을 담당 *** */
+            max-width: 400px; 
+            overflow-y: auto; 
             text-align: left;
             padding: 10px;
-            padding-right: 20px; /* 스크롤바 공간 */
+            padding-right: 20px; 
             border-top: 1px solid #50507a;
             border-bottom: 1px solid #50507a;
-            box-sizing: border-box; /* ◀◀◀ 이 한 줄을 추가해주세요 */
+            box-sizing: border-box;
         }
         
         #instructions h3 {
@@ -228,7 +259,7 @@
         }
         
         #instructions b {
-            color: #FFFF00; /* 노란색 강조 */
+            color: #FFFF00; 
         }
         
         #instructions code {
@@ -257,8 +288,8 @@
             padding: 15px;
             cursor: pointer;
             transition: background-color 0.2s;
-            text-align: center; /* ◀◀◀ 추가 (카드 내부 텍스트 정렬) */
-            box-sizing: border-box; /* ◀◀◀ 추가 (패딩이 너비를 밀어내지 않도록) */
+            text-align: center;
+            box-sizing: border-box;
         }
         
         .upgrade-card:hover {
@@ -283,11 +314,23 @@
 
     <div id="game-container">
         
-        <button id="info-button">?</button> <div id="top-ui">
-            <div id="time-display">Time: 0</div> <div id="level">Lv. 1</div>
+        <button id="info-button">?</button>
+
+        <div id="top-ui">
+            <div id="time-display">Time: 0</div>
+            <div id="level">Lv. 1</div>
         </div>
         
-        <div id="exp-bar"></div> <canvas id="game-canvas"></canvas>
+        <div id="core-hp-container">
+            <div>💎 SOUL CORE</div>
+            <div id="core-hp-bar-outer">
+                <div id="core-hp-bar-inner"></div>
+            </div>
+        </div>
+        
+        <div id="exp-bar"></div>
+
+        <canvas id="game-canvas"></canvas>
 
         <div id="ui-container">
             <div id="gauge-container">
@@ -298,9 +341,10 @@
         <div id="game-overlay" class="overlay visible">
             <div id="overlay-content-wrapper">
                 <h1>👻 에코 점퍼 👻</h1>
-                <p id="best-time-display">Best Time: 0</p> <p id="overlay-message">
-                    적의 몸을 빼앗아 싸우세요!<br>
-                    숙주가 파괴되기 전에 다음 적으로 '점프'하세요.
+                <p id="best-time-display">Best Time: 0</p>
+                <p id="overlay-message">
+                    중앙의 '영혼 핵(💎)'을 지키세요!<br>
+                    적에게 빙의하여 핵으로 가는 적들을 처치하세요.
                 </p>
                 
                 <div id="instructions">
@@ -308,21 +352,21 @@
                     <h4>🖥️ PC (키보드 + 마우스)</h4>
                     <ul>
                         <li><b>이동:</b> 마우스 커서를 움직여 해당 방향으로 이동합니다.</li>
-                        <li><b>대시/빙의:</b> <code>마우스 왼쪽 클릭</code>을 하여 가장 가까운 적에게 대시/빙의합니다.</li>
+                        <li><b>대시/빙의/해제:</b> <code>마우스 왼쪽 클릭</code></li>
                     </ul>
                     <h4>📱 모바일 (터치스크린)</h4>
                     <ul>
                         <li><b>이동:</b> 화면 아무 곳이나 <code>손가락으로 드래그</code>하여 해당 방향으로 이동합니다.</li>
-                        <li><b>대시/빙의:</b> 화면 아무 곳이나 <code>짧게 탭(Tap)</code>하여 가장 가까운 적에게 대시/빙의합니다.</li>
+                        <li><b>대시/빙의/해제:</b> 화면 아무 곳이나 <code>짧게 탭(Tap)</code>합니다.</li>
                     </ul>
                     
                     <h3>1. 기본 플레이 방법</h3>
                     <ul>
-                        <li>플레이어는 공격 능력이 없는 <b>'유령 (🔵)'</b> 상태로 시작합니다. 유령 상태에서 적과 닿으면 <b>즉시 게임 오버</b>입니다.</li>
-                        <li>'대시'로 몬스터(예: <code>◻️</code>)에게 닿으면 <b>'빙의'</b>합니다.</li>
-                        <li>빙의에 성공하면, 플레이어는 <b>'푸른색 숙주 (◻️🔵)'</b>가 되어 몬스터를 조종하며, 해당 몬스터의 고유 능력이 <b>자동으로 발동</b>됩니다.</li>
-                        <li>하단의 <b>'빙의 게이지'</b>는 <b>지속적으로 감소</b>합니다. 게이지가 0이 되면 숙주가 파괴되고 당신은 잠시 무적 상태의 '유령'이 됩니다.</li>
-                        <li><b>(중요) 숙주 피격:</b> 숙주 상태에서 적과 닿으면, 게이지가 추가로 <b>더 빨리 닳습니다!</b></li>
+                        <li><b>게임 목표:</b> 맵 중앙의 <b>'영혼 핵(💎)'</b>을 몬스터로부터 지키는 것입니다. 핵의 HP가 0이 되면 게임 오버입니다.</li>
+                        <li><b>유령 (🔵):</b> 플레이어의 기본 상태입니다. 이 상태에서는 <b>무적</b>이지만, 공격할 수 없습니다. 적진을 뚫고 경험치(💎)를 수집할 수 있습니다.</li>
+                        <li><b>빙의 (Push):</b> 유령 상태에서 탭/클릭하면 가장 가까운 적에게 '빙의'합니다.</li>
+                        <li><b>숙주 (◻️🔵):</b> 빙의에 성공하면, '푸른색 숙주'가 되어 자동으로 공격합니다. <b>하지만, 이 상태에서는 적에게 닿으면 빙의 게이지가 깎입니다!</b></li>
+                        <li><b>빙의 해제 (Pull):</b> 숙주 상태에서 탭/클릭하면, <b>즉시 빙의를 해제</b>하고 안전한 '무적 유령' 상태로 돌아옵니다.</li>
                     </ul>
                     
                     <h3>2. 몬스터(숙주) 특징</h3>
@@ -333,11 +377,14 @@
                         <li><b>🩶 가고일 (HP: 10):</b> [방어형] <b>공격 능력이 없습니다.</b> 대신 빙의 게이지가 압도적으로 길어 '안전지대' 역할을 합니다.</li>
                     </ul>
                     
-                    <h3>3. 기록</h3>
+                    <h3>⭐ 3. 엘리트 몬스터 (신규) ⭐</h3>
                     <ul>
-                        <li>적을 처치하면 '에코(💎)'를 모아 레벨 업 합니다.</li>
-                        <li>점수는 없고, 오직 <b>'버틴 시간'</b>으로만 기록이 측정됩니다.</li>
-                        <li>최고 기록은 브라우저에 자동으로 저장됩니다.</li>
+                        <li>낮은 확률로 <b>노란색(🟡)</b>으로 빛나며 <b>왕관(👑)</b>을 쓴 '엘리트' 몬스터가 등장합니다. (HP 2배)</li>
+                        <li>엘리트 몬스터에게 빙의하면 <b>강화된 스킬</b>을 사용합니다!</li>
+                        <li><b>👑 엘리트 스켈레톤:</b> "트리플 샷" (뼈다귀 3발 발사)</li>
+                        <li><b>👑 엘리트 좀비:</b> "광역 부패" (오라 범위 1.5배)</li>
+                        <li><b>👑 엘리트 박쥐:</b> "소닉 스프레드" (초음파 3발 발사)</li>
+                        <li><b>👑 엘리트 가고일:</b> "영혼 수복" (빙의 중 <b>영혼 핵 HP</b> 서서히 회복)</li>
                     </ul>
                 </div>
                 
@@ -386,6 +433,7 @@
             const expBar = document.getElementById('exp-bar');
             const gaugeContainer = document.getElementById('gauge-container');
             const gaugeBar = document.getElementById('gauge-bar');
+            const coreHpBar = document.getElementById('core-hp-bar-inner');
             
             const levelUpOverlay = document.getElementById('level-up-overlay');
             const upgradeCards = document.querySelectorAll('.upgrade-card');
@@ -393,33 +441,34 @@
             // --- 캔버스 크기 ---
             const VIEWPORT_WIDTH = gameContainer.clientWidth;
             const VIEWPORT_HEIGHT = gameContainer.clientHeight;
-            const PIXEL_SCALE = 4; 
+            const PIXEL_SCALE = 2; 
             canvas.width = VIEWPORT_WIDTH;
             canvas.height = VIEWPORT_HEIGHT;
             ctx.imageSmoothingEnabled = false;
 
             // --- 게임 상태 및 설정 ---
-            let gameState = 'START'; // 'START', 'PLAYING', 'PAUSED', 'OVER'
-            let gameTime = 0; // (Score -> Time)
+            let gameState = 'START'; 
+            let gameTime = 0; 
             let gameLoopId = null;
             let frameCount = 0;
-            let gameTimerInterval = null; // (새로 추가)
+            let gameTimerInterval = null; 
             
-            let spawnInterval = 180; // 3초
+            let spawnInterval = 180; 
             let nextSpawnFrame = spawnInterval;
             let waveCount = 1;
+            let eliteSpawnChance = 0.1; // (새로 추가)
 
-            let player, enemies, projectiles, echoes;
+            let player, enemies, projectiles, echoes, particles, soulCore;
 
             const BEST_TIME_KEY = 'echoJumperBestTime';
-
-            // --- 마우스/터치 위치 ---
             let targetPos = { x: VIEWPORT_WIDTH / 2, y: VIEWPORT_HEIGHT / 2 };
 
             // --- 몬스터/플레이어/업그레이드 정의 (수정됨) ---
             const PLAYER_COLOR = '#00FFFF';
-            const PLAYER_RADIUS = 4 * PIXEL_SCALE; // 8px
+            const PLAYER_RADIUS = 4 * PIXEL_SCALE; 
             const PLAYER_SPEED_WISP = 2.5;
+            const ELITE_COLOR = '#FFFF00'; // 엘리트 광원
+            const CROWN_SPRITE = ['111','101','010']; // 3x3 왕관
 
             const MOB_PROPERTIES = {
                 'skeleton': { gauge: 1000, attackType: 'bone', attackCooldown: 60, speed: 1.5, hp: 2, exp: 10, 
@@ -433,29 +482,49 @@
             };
             const MOB_TYPES = Object.keys(MOB_PROPERTIES);
             
-            // 업그레이드 풀
             const UPGRADE_POOL = [
                 { id: 'gauge_1', title: '숙주 안정화 I', desc: '빙의 게이지 총량이 15% 증가합니다.', apply: () => player.stats.maxGaugeMult += 0.15 },
                 { id: 'wisp_speed_1', title: '유령 기동력 I', desc: '유령 상태의 이동 속도가 10% 증가합니다.', apply: () => player.stats.wispSpeedMult += 0.1 },
-                { id: 'jump_nova', title: '소울 노바', desc: '새로운 숙주로 \'점프\'할 때 주변에 폭발을 일으킵니다.', apply: () => player.stats.jumpNova = true },
+                { id: 'jump_nova', title: '소울 노바', desc: '새로운 숙주로 \'빙의\'할 때 주변에 폭발을 일으킵니다.', apply: () => player.stats.jumpNova = true },
                 { id: 'attack_speed_1', title: '공격 속도 I', desc: '숙주의 공격 속도가 10% 증가합니다.', apply: () => player.stats.attackSpeedMult += 0.1 },
                 { id: 'aura_size_1', title: '부패 오라 확장 I', desc: '좀비의 오라 범위가 15% 증가합니다.', apply: () => player.stats.auraSizeMult += 0.15 },
                 { id: 'bone_damage_1', title: '날카로운 뼈 I', desc: '스켈레톤의 뼈 데미지가 1 증가합니다.', apply: () => player.stats.boneDamage += 1 },
                 { id: 'sonic_damage_1', title: '초음파 강화 I', desc: '박쥐의 초음파 데미지가 1 증가합니다.', apply: () => player.stats.sonicDamage += 1 },
+                { id: 'core_hp_1', title: '영혼 핵 강화 I', desc: '영혼 핵의 최대 HP가 20% 증가합니다.', apply: () => {soulCore.maxHp *= 1.2; soulCore.heal(soulCore.maxHp * 0.2);} },
+                { id: 'elite_chance_1', title: '불안정한 영혼', desc: '엘리트 몬스터 등장 확률이 5% 증가합니다.', apply: () => eliteSpawnChance += 0.05 },
             ];
             let currentUpgradeChoices = [];
 
             // --- 픽셀 아트 그리기 함수 ---
-            function drawPixelSprite(spriteData, x, y, colorTint) {
+            function drawPixelSprite(spriteData, x, y, colorTint, isElite = false) {
                 const spriteHeight = spriteData.length;
                 const spriteWidth = spriteData[0].length;
-                const startX = Math.floor(x - (spriteWidth * PIXEL_SCALE) / 2);
-                const startY = Math.floor(y - (spriteHeight * PIXEL_SCALE) / 2);
-                ctx.fillStyle = colorTint;
+                const scale = PIXEL_SCALE * (isElite ? 1.5 : 1); // 엘리트는 1.5배 크게
+                
+                const startX = Math.floor(x - (spriteWidth * scale) / 2);
+                const startY = Math.floor(y - (spriteHeight * scale) / 2);
+
+                if (colorTint) ctx.fillStyle = colorTint;
+                
                 for (let r = 0; r < spriteHeight; r++) {
                     for (let c = 0; c < spriteWidth; c++) {
                         if (spriteData[r][c] === '1') {
-                            ctx.fillRect(startX + c * PIXEL_SCALE, startY + r * PIXEL_SCALE, PIXEL_SCALE, PIXEL_SCALE);
+                            ctx.fillRect(startX + c * scale, startY + r * scale, scale, scale);
+                        }
+                    }
+                }
+                
+                // (새로 추가) 엘리트 왕관 그리기
+                if (isElite) {
+                    const crownY = startY - (CROWN_SPRITE.length * PIXEL_SCALE) - 2; // 몹 머리 위에
+                    const crownX = Math.floor(x - (CROWN_SPRITE[0].length * PIXEL_SCALE) / 2);
+                    
+                    ctx.fillStyle = ELITE_COLOR;
+                    for (let r = 0; r < CROWN_SPRITE.length; r++) {
+                        for (let c = 0; c < CROWN_SPRITE[r].length; c++) {
+                            if (CROWN_SPRITE[r][c] === '1') {
+                                ctx.fillRect(crownX + c * PIXEL_SCALE, crownY + r * PIXEL_SCALE, PIXEL_SCALE, PIXEL_SCALE);
+                            }
                         }
                     }
                 }
@@ -466,10 +535,11 @@
                 constructor() { this.reset(); }
                 reset() {
                     this.x = VIEWPORT_WIDTH / 2;
-                    this.y = VIEWPORT_HEIGHT / 2;
+                    this.y = VIEWPORT_HEIGHT / 2 + 100; 
                     this.radius = PLAYER_RADIUS;
                     this.state = 'WISP'; 
                     this.hostType = null;
+                    this.isEliteHost = false; // (새로 추가)
                     this.gauge = 0;
                     this.maxGauge = 0;
                     this.speed = PLAYER_SPEED_WISP;
@@ -505,7 +575,9 @@
                         ctx.globalAlpha = 1.0;
                     } else if (this.state === 'HOST') {
                         const spriteData = MOB_PROPERTIES[this.hostType].sprite;
-                        drawPixelSprite(spriteData, this.x, this.y, PLAYER_COLOR);
+                        // 엘리트는 노란색, 일반은 파란색으로 빛남
+                        ctx.shadowColor = this.isEliteHost ? ELITE_COLOR : PLAYER_COLOR;
+                        drawPixelSprite(spriteData, this.x, this.y, PLAYER_COLOR, this.isEliteHost);
                     }
                     ctx.shadowBlur = 0;
                 }
@@ -532,6 +604,11 @@
                         gaugeBar.style.width = `${Math.max(0, (this.gauge / this.maxGauge) * 100)}%`;
                         if (this.gauge <= 0) this.unpossess();
                         
+                        // (새로 추가) 엘리트 가고일 핵 수리
+                        if(this.hostType === 'gargoyle' && this.isEliteHost && frameCount % 60 === 0) {
+                            soulCore.heal(1); // 1초당 1 HP
+                        }
+                        
                         this.attackTimer--;
                         if (this.attackTimer <= 0) this.attack();
                     }
@@ -548,11 +625,22 @@
                     switch (this.hostType) {
                         case 'skeleton':
                             if (target) {
-                                projectiles.push(new Projectile(this.x, this.y, target, 'bone', this.stats.boneDamage));
+                                const damage = this.stats.boneDamage;
+                                if (this.isEliteHost) {
+                                    // 3-shot
+                                    const angle = Math.atan2(target.y - this.y, target.x - this.x);
+                                    projectiles.push(new Projectile(this.x, this.y, null, 'bone', damage, { dx: Math.cos(angle), dy: Math.sin(angle) }));
+                                    projectiles.push(new Projectile(this.x, this.y, null, 'bone', damage, { dx: Math.cos(angle - 0.3), dy: Math.sin(angle - 0.3) }));
+                                    projectiles.push(new Projectile(this.x, this.y, null, 'bone', damage, { dx: Math.cos(angle + 0.3), dy: Math.sin(angle + 0.3) }));
+                                } else {
+                                    // 1-shot
+                                    projectiles.push(new Projectile(this.x, this.y, target, 'bone', damage));
+                                }
                             }
                             break;
                         case 'zombie':
-                            const auraRadius = 60 * this.stats.auraSizeMult;
+                            const auraRadius = 60 * this.stats.auraSizeMult * (this.isEliteHost ? 1.5 : 1);
+                            particles.push(new Particle(this.x, this.y, 0, 0, 10, '#32CD32', 'aura', auraRadius));
                             enemies.forEach(enemy => {
                                 if (Math.hypot(this.x - enemy.x, this.y - enemy.y) < auraRadius) {
                                     enemy.takeDamage(1); 
@@ -561,20 +649,33 @@
                             break;
                         case 'bat': 
                             if (target) {
-                                projectiles.push(new Projectile(this.x, this.y, target, 'sonic', this.stats.sonicDamage));
+                                const damage = this.stats.sonicDamage;
+                                if (this.isEliteHost) {
+                                    // 3-shot
+                                    const angle = Math.atan2(target.y - this.y, target.x - this.x);
+                                    projectiles.push(new Projectile(this.x, this.y, null, 'sonic', damage, { dx: Math.cos(angle), dy: Math.sin(angle) }));
+                                    projectiles.push(new Projectile(this.x, this.y, null, 'sonic', damage, { dx: Math.cos(angle - 0.3), dy: Math.sin(angle - 0.3) }));
+                                    projectiles.push(new Projectile(this.x, this.y, null, 'sonic', damage, { dx: Math.cos(angle + 0.3), dy: Math.sin(angle + 0.3) }));
+                                } else {
+                                    // 1-shot
+                                    projectiles.push(new Projectile(this.x, this.y, target, 'sonic', damage));
+                                }
                             }
                             break;
                     }
                 }
                 
                 dash() {
-                    if (this.dashCooldown > 0 || this.state === 'HOST') return; 
+                    if (this.dashCooldown > 0) return; 
                     this.dashCooldown = 30; 
                     
-                    let closestEnemy = findNearestEnemy(this.x, this.y, 150); 
-                    
-                    if (closestEnemy) {
-                        this.possess(closestEnemy);
+                    if (this.state === 'HOST') {
+                        this.unpossess();
+                    } else {
+                        let closestEnemy = findNearestEnemy(this.x, this.y, 150); 
+                        if (closestEnemy) {
+                            this.possess(closestEnemy);
+                        }
                     }
                 }
 
@@ -583,8 +684,11 @@
                         projectiles.push(new Projectile(this.x, this.y, null, 'explosion', 5));
                     }
                     
+                    particles.push(new Particle(this.x, this.y, 0, 0, 20, PLAYER_COLOR, 'shockwave'));
+                    
                     this.state = 'HOST';
                     this.hostType = enemy.type;
+                    this.isEliteHost = enemy.isElite; // (새로 추가)
                     const props = MOB_PROPERTIES[this.hostType];
                     this.maxGauge = props.gauge * this.stats.maxGaugeMult;
                     this.gauge = this.maxGauge;
@@ -600,8 +704,9 @@
 
                 unpossess() {
                     this.state = 'UNPOSSESSING'; 
-                    this.unpossessTimer = 90; // 1.5초 무적
+                    this.unpossessTimer = 90; 
                     this.hostType = null;
+                    this.isEliteHost = false; // (새로 추가)
                     this.gauge = 0;
                     gaugeContainer.style.display = 'none';
                 }
@@ -609,7 +714,6 @@
                 takeGaugeDamage(amount) {
                     if (this.state !== 'HOST') return;
                     this.gauge -= amount;
-                    // (TODO: 피격 시각 효과)
                 }
                 
                 collectExp(value) {
@@ -630,6 +734,9 @@
                     levelDisplay.textContent = `Lv. ${this.level}`;
                     expBar.style.transform = `scaleX(${Math.max(0, this.experience / this.expToNextLevel)})`;
                     
+                    gameContainer.style.backgroundColor = '#FFFF00';
+                    setTimeout(() => { gameContainer.style.backgroundColor = '#2a2a3e'; }, 100);
+                    
                     currentUpgradeChoices = getRandomUpgrades(3);
                     for (let i = 0; i < 3; i++) {
                         upgradeCards[i].querySelector('h3').textContent = currentUpgradeChoices[i].title;
@@ -644,65 +751,83 @@
             }
             
             class Enemy {
-                constructor(x, y, type) {
+                constructor(x, y, type, isElite) {
                     this.x = x;
                     this.y = y;
                     this.type = type;
+                    this.isElite = isElite; // (새로 추가)
                     this.props = MOB_PROPERTIES[type];
-                    this.hp = this.props.hp;
-                    this.radius = 8 * PIXEL_SCALE; 
+                    this.hp = this.props.hp * (isElite ? 2 : 1); // 엘리트는 HP 2배
+                    this.radius = 8 * PIXEL_SCALE * (isElite ? 1.5 : 1); // 엘리트는 1.5배 큼
                     this.color = this.props.color;
                     this.sprite = this.props.sprite;
                     this.speed = this.props.speed;
+                    this.hitTimer = 0; 
                 }
                 draw() {
-                    ctx.shadowColor = this.color;
-                    ctx.shadowBlur = 10;
-                    drawPixelSprite(this.sprite, this.x, this.y, this.color);
+                    let drawColor = this.color;
+                    if (this.hitTimer > 0) {
+                        this.hitTimer--;
+                        drawColor = '#FFFFFF'; 
+                    }
+                    
+                    ctx.shadowColor = this.isElite ? ELITE_COLOR : this.color;
+                    ctx.shadowBlur = this.isElite ? 15 : 10;
+                    drawPixelSprite(this.sprite, this.x, this.y, drawColor, this.isElite);
                     ctx.shadowBlur = 0;
                 }
                 update() {
-                    const dx = player.x - this.x;
-                    const dy = player.y - this.y;
+                    const dx = soulCore.x - this.x;
+                    const dy = soulCore.y - this.y;
                     const dist = Math.hypot(dx, dy);
-                    if (dist > this.radius) { 
+                    if (dist > this.radius + soulCore.radius) { 
                         this.x += dx / dist * this.speed * 0.5; 
                         this.y += dy / dist * this.speed * 0.5;
                     }
                 }
                 takeDamage(amount) {
                     this.hp -= amount;
+                    this.hitTimer = 5; 
                     if (this.hp <= 0) {
                         this.die();
                     }
                 }
                 die() {
-                    echoes.push(new Echo(this.x, this.y, this.props.exp));
+                    const exp = this.props.exp * (this.isElite ? 3 : 1); // 엘리트는 경험치 3배
+                    echoes.push(new Echo(this.x, this.y, exp));
+                    for(let i=0; i < 5; i++) {
+                        particles.push(new Particle(this.x, this.y, (Math.random()-0.5)*3, (Math.random()-0.5)*3, 30, this.color, 'pixel'));
+                    }
                     enemies = enemies.filter(e => e !== this);
                 }
             }
             
             class Projectile {
-                constructor(x, y, target, type, damage) {
+                constructor(x, y, target, type, damage, direction = null) {
                     this.x = x;
                     this.y = y;
                     this.type = type;
                     this.damage = damage;
                     this.radius = 2 * PIXEL_SCALE;
                     this.speed = (type === 'sonic') ? 8 : 5;
-                    this.life = 60; // 1초 수명
+                    this.life = 60; 
                     
-                    if (type === 'explosion') {
+                    if (direction) { // (새로 추가) 각도 기반
+                        this.dx = direction.dx * this.speed;
+                        this.dy = direction.dy * this.speed;
+                    } else if (type === 'explosion') {
                         this.radius = 50;
-                        this.life = 10; // 0.16초
+                        this.life = 10; 
+                        this.dx = 0; this.dy = 0;
                     } else if (target) {
                         const dx = target.x - this.x;
                         const dy = target.y - this.y;
                         const dist = Math.hypot(dx, dy);
                         this.dx = (dx / dist) * this.speed;
                         this.dy = (dy / dist) * this.speed;
-                    } else { 
+                    } else {
                         this.dx = 0; this.dy = 0; 
+                        this.life = 0; // 타겟 없으면 바로 소멸
                     }
                 }
                 draw() {
@@ -711,12 +836,12 @@
                         case 'bone':
                             ctx.fillStyle = '#FFFFFF';
                             ctx.shadowColor = '#FFFFFF';
-                            ctx.fillRect(this.x - 2, this.y - 4, 4, 8); // 2x4 픽셀
+                            ctx.fillRect(this.x - 2, this.y - 4, 4, 8); 
                             break;
                         case 'sonic':
                             ctx.fillStyle = '#9400D3';
                             ctx.shadowColor = '#9400D3';
-                            ctx.fillRect(this.x - 4, this.y - 1, 8, 2); // 4x1 픽셀
+                            ctx.fillRect(this.x - 4, this.y - 1, 8, 2); 
                             break;
                         case 'explosion':
                             ctx.strokeStyle = '#FFFF00';
@@ -743,7 +868,7 @@
                     this.y = y;
                     this.value = value;
                     this.radius = 3 * PIXEL_SCALE;
-                    this.color = '#FFFF00'; // 노란색
+                    this.color = '#FFFF00'; 
                     this.pickupRadius = 60;
                 }
                 draw() {
@@ -756,12 +881,56 @@
                     ctx.shadowBlur = 0;
                 }
                 update() {
-                    const dist = Math.hypot(player.x - this.x, player.y - this.y);
-                    if (dist < this.pickupRadius) {
-                        const dx = player.x - this.x;
-                        const dy = player.y - this.y;
-                        this.x += dx * 0.1;
-                        this.y += dy * 0.1;
+                    if (player.state === 'WISP' || player.state === 'UNPOSSESSING') {
+                        const dist = Math.hypot(player.x - this.x, player.y - this.y);
+                        if (dist < this.pickupRadius) {
+                            const dx = player.x - this.x;
+                            const dy = player.y - this.y;
+                            this.x += dx * 0.1;
+                            this.y += dy * 0.1;
+                        }
+                    }
+                }
+            }
+            
+            // 파티클 클래스
+            class Particle {
+                constructor(x, y, dx, dy, life, color, type, radius = 0) {
+                    this.x = x;
+                    this.y = y;
+                    this.dx = dx;
+                    this.dy = dy;
+                    this.life = life;
+                    this.color = color;
+                    this.type = type;
+                    this.initialLife = life;
+                    this.radius = radius;
+                }
+                draw() {
+                    ctx.globalAlpha = this.life / this.initialLife; 
+                    if (this.type === 'pixel') {
+                        ctx.fillStyle = this.color;
+                        ctx.fillRect(this.x, this.y, PIXEL_SCALE, PIXEL_SCALE);
+                    } else if (this.type === 'shockwave') {
+                        ctx.strokeStyle = this.color;
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, 20 + (this.initialLife - this.life), 0, Math.PI*2);
+                        ctx.stroke();
+                    } else if (this.type === 'aura') {
+                        ctx.fillStyle = this.color;
+                        ctx.globalAlpha = 0.2; 
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+                        ctx.fill();
+                    }
+                    ctx.globalAlpha = 1.0;
+                }
+                update() {
+                    this.life--;
+                    if(this.type === 'pixel') {
+                        this.x += this.dx;
+                        this.y += this.dy;
                     }
                 }
             }
@@ -769,19 +938,12 @@
             // --- 이벤트 리스너 ---
             
             startButton.addEventListener('click', handleStartButton);
-            
-            // 정보 버튼 (수정됨)
             infoButton.addEventListener('click', () => {
                 if (gameState === 'PLAYING' || gameState === 'PAUSED') return;
-                
-                if (gameOverlay.dataset.mode === 'info') {
-                    setupStartScreen(); // 정보 -> 시작
-                } else {
-                    showInfo(); // 시작 -> 정보
-                }
+                if (gameOverlay.dataset.mode === 'info') setupStartScreen();
+                else showInfo();
             });
             
-            // 이동
             canvas.addEventListener('mousemove', e => {
                 const rect = canvas.getBoundingClientRect();
                 targetPos.x = e.clientX - rect.left;
@@ -794,7 +956,6 @@
                 targetPos.y = e.touches[0].clientY - rect.top;
             }, { passive: false });
             
-            // 대시/빙의
             canvas.addEventListener('mousedown', e => {
                 if (gameState === 'PLAYING') player.dash();
             });
@@ -804,14 +965,14 @@
                 }
             }, { passive: false });
             
-            // 업그레이드 카드 클릭
             upgradeCards.forEach((card, index) => {
                 card.addEventListener('click', () => {
                     if (gameState !== 'PAUSED') return;
                     currentUpgradeChoices[index].apply();
                     gameState = 'PLAYING';
                     levelUpOverlay.classList.remove('visible');
-                    gameLoop(); // 루프 재시작
+                    infoButton.style.display = 'none'; 
+                    gameLoop(); 
                 });
             });
 
@@ -847,21 +1008,28 @@
                 }
                 return false;
             }
+            
+            const SOUL_CORE_SPRITE = ['00100','01110','11111','01110','00100'];
+            const SOUL_CORE_COLOR = '#FF00FF';
+            function drawSoulCore() {
+                ctx.shadowColor = SOUL_CORE_COLOR;
+                ctx.shadowBlur = 15;
+                drawPixelSprite(SOUL_CORE_SPRITE, soulCore.x, soulCore.y, SOUL_CORE_COLOR, true); // (엘리트처럼 크게)
+                ctx.shadowBlur = 0;
+            }
+            function updateCoreHpBar() {
+                coreHpBar.style.width = `${Math.max(0, (soulCore.hp / soulCore.maxHp) * 100)}%`;
+            }
 
             // --- 핵심 함수 ---
 
             function handleStartButton() {
-                if (gameOverlay.dataset.mode === 'info') {
-                    setupStartScreen();
-                } else {
-                    startGame();
-                }
+                if (gameOverlay.dataset.mode === 'info') setupStartScreen();
+                else startGame();
             }
             
             function setupStartScreen(isGameOver = false) {
                 gameState = 'START';
-                
-                // 최고 시간 표시 (수정)
                 bestTimeDisplay.textContent = `Best Time: ${getBestTime()}s`;
                 
                 if (isGameOver) {
@@ -877,12 +1045,11 @@
                     startButton.textContent = '시작하기';
                 }
                 
-                // 정보창 숨기고 기본 메시지 표시
                 instructions.style.display = 'none';
                 overlayMessage.style.display = 'block';
                 gameOverlay.dataset.mode = 'start';
                 gameOverlay.classList.add('visible');
-                infoButton.style.display = 'block';
+                infoButton.style.display = 'block'; 
             }
             
             function showInfo() {
@@ -891,7 +1058,7 @@
                 overlayMessage.style.display = 'none'; 
                 finalScoreDisplay.style.display = 'none';
                 startButton.textContent = '돌아가기';
-                instructions.scrollTop = 0; // 스크롤 맨 위로
+                setTimeout(() => { instructions.scrollTop = 0; }, 0); 
             }
 
             function startGame() {
@@ -907,15 +1074,28 @@
                 levelDisplay.textContent = `Lv. ${player.level}`;
                 expBar.style.transform = `scaleX(0)`;
                 
+                soulCore = { 
+                    x: VIEWPORT_WIDTH / 2, 
+                    y: VIEWPORT_HEIGHT / 2, 
+                    radius: 10 * PIXEL_SCALE, 
+                    hp: 100, 
+                    maxHp: 100,
+                    heal(amount) {
+                        this.hp = Math.min(this.maxHp, this.hp + amount);
+                        updateCoreHpBar();
+                    }
+                };
+                updateCoreHpBar();
+                
                 enemies = [];
                 projectiles = [];
                 echoes = [];
+                particles = [];
 
                 gameState = 'PLAYING';
                 gameOverlay.classList.remove('visible');
-                infoButton.style.display = 'none';
+                infoButton.style.display = 'none'; 
                 
-                // 1초마다 시간 갱신 타이머
                 clearInterval(gameTimerInterval);
                 gameTimerInterval = setInterval(() => {
                     if (gameState === 'PLAYING') {
@@ -924,12 +1104,12 @@
                     }
                 }, 1000);
                 
-                gameLoop(); // 루프 시작
+                gameLoop(); 
             }
 
             function endGame() {
                 gameState = 'OVER';
-                clearInterval(gameTimerInterval); // 시간 타이머 정지
+                clearInterval(gameTimerInterval); 
                 cancelAnimationFrame(gameLoopId);
                 setupStartScreen(true); 
             }
@@ -937,26 +1117,20 @@
             // 스폰 로직 (수정됨)
             function spawnEnemies() {
                 frameCount++;
-                
-                // 10초까지는 3초에 1마리
-                if (frameCount < 600 && frameCount % 180 !== 0) {
-                    if (frameCount === 60) { // 1초 뒤 1마리 스폰 (튜토리얼용)
-                         enemies.push(new Enemy(VIEWPORT_WIDTH / 2, 50, 'skeleton'));
-                    }
-                    return;
-                }
+                if (frameCount < 180) return; // 3초간 대기
                 
                 if (frameCount > nextSpawnFrame) {
                     for(let i=0; i < waveCount; i++) {
                         const x = Math.random() < 0.5 ? -20 : VIEWPORT_WIDTH + 20;
                         const y = Math.random() * VIEWPORT_HEIGHT;
                         const type = MOB_TYPES[Math.floor(Math.random() * MOB_TYPES.length)];
-                        enemies.push(new Enemy(x, y, type));
+                        const isElite = Math.random() < eliteSpawnChance; // (새로 추가)
+                        enemies.push(new Enemy(x, y, type, isElite));
                     }
                     nextSpawnFrame = frameCount + spawnInterval;
                 }
                 
-                // 20초마다 난이도 상승 (수정)
+                // 20초마다 난이도 상승
                 if (frameCount % 1200 === 0 && frameCount > 0) { 
                     spawnInterval = Math.max(30, spawnInterval * 0.9); 
                     waveCount = Math.min(10, waveCount + 1); 
@@ -964,26 +1138,33 @@
             }
             
             function checkCollisions() {
-                // 1. 유령 + 적 -> 게임 오버
-                if (player.state === 'WISP') { 
-                    for (const enemy of enemies) {
-                        if (Math.hypot(player.x - enemy.x, player.y - enemy.y) < player.radius + enemy.radius) {
-                            endGame();
-                            return; 
-                        }
-                    }
-                }
+                // 1. 유령 vs 적 -> (이제 충돌 없음)
                 
-                // 2. 숙주 + 적 -> 게이지 대미지 (새로 추가)
+                // 2. 숙주 + 적 -> 게이지 대미지
                 if (player.state === 'HOST') {
                     for (const enemy of enemies) {
                         if (Math.hypot(player.x - enemy.x, player.y - enemy.y) < player.radius + enemy.radius) {
-                            player.takeGaugeDamage(50); // 50 프레임만큼의 게이지 즉시 감소
+                            player.takeGaugeDamage(50); 
                         }
                     }
                 }
                 
-                // 3. 투사체 + 적
+                // 3. 적 + 영혼 핵
+                for (let i = enemies.length - 1; i >= 0; i--) {
+                    const e = enemies[i];
+                    if (Math.hypot(e.x - soulCore.x, e.y - soulCore.y) < e.radius + soulCore.radius) {
+                        soulCore.hp -= e.props.hp; 
+                        updateCoreHpBar();
+                        e.die(); 
+                        
+                        if (soulCore.hp <= 0) {
+                            endGame();
+                            return;
+                        }
+                    }
+                }
+                
+                // 4. 투사체 + 적
                 for (let i = projectiles.length - 1; i >= 0; i--) {
                     const p = projectiles[i];
                     let projectileHit = false;
@@ -1001,10 +1182,12 @@
                     }
                 }
                 
-                // 4. 플레이어 + 에코
+                // 5. 플레이어 + 에코
                 for (let i = echoes.length - 1; i >= 0; i--) {
                     const e = echoes[i];
-                    if (Math.hypot(player.x - e.x, player.y - e.y) < player.radius + e.radius + 10) {
+                    if ((player.state === 'WISP' || player.state === 'UNPOSSESSING') &&
+                        Math.hypot(player.x - e.x, player.y - e.y) < player.radius + e.radius + 10) 
+                    {
                         player.collectExp(e.value);
                         echoes.splice(i, 1);
                     }
@@ -1031,18 +1214,22 @@
                 enemies.forEach(e => e.update());
                 projectiles.forEach(p => p.update());
                 echoes.forEach(e => e.update());
+                particles.forEach(p => p.update());
                 
                 // 4. 충돌
                 checkCollisions();
                 
                 // 5. 그리기
+                drawSoulCore(); 
                 projectiles.forEach(p => p.draw());
                 echoes.forEach(e => e.draw());
                 enemies.forEach(e => e.draw());
                 player.draw(); 
+                particles.forEach(p => p.draw());
                 
-                // 6. 투사체 제거 (수명)
+                // 6. 제거 (수명 다한 객체들)
                 projectiles = projectiles.filter(p => p.life > 0);
+                particles = particles.filter(p => p.life > 0);
             }
             
             // 초기 화면 설정
