@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>👻 에코 점퍼 (v6.1 - Attack Buffs)</title>
+    <title>👻 에코 점퍼 (v6.2 - 난이도 하향)</title>
     <style>
         /* --- 기본 및 레이아웃 --- */
         html, body {
@@ -381,6 +381,7 @@
                     <h3>⭐ 3. 엘리트 몬스터 ⭐</h3>
                     <ul>
                         <li>낮은 확률로 <b>노란색(🟡)</b>으로 빛나며 <b>왕관(👑)</b>을 쓴 '엘리트' 몬스터가 등장합니다. (HP 2배)</li>
+                        <li>엘리트 몬스터는 <b>기본 HP 보너스(+5)</b>를 받으며, 시간이 지날수록 더 강해집니다.</li>
                         <li>엘리트 몬스터에게 빙의하면 <b>강화된 스킬</b>을 사용합니다!</li>
                         <li>(예: "트리플 샷", "영혼 수복" 등)</li>
                     </ul>
@@ -463,7 +464,7 @@
 
             // --- 몬스터/플레이어/업그레이드 정의 (수정됨) ---
             const PLAYER_COLOR = '#00FFFF';
-            const PLAYER_RADIUS = 3 * PIXEL_SCALE; // 4 -> 3
+            const PLAYER_RADIUS = 3 * PIXEL_SCALE; // (수정) 4 -> 3
             const PLAYER_SPEED_WISP = 3.0; 
             const PLAYER_DASH_SPEED = 10; 
             const ELITE_COLOR = '#FFFF00'; 
@@ -485,19 +486,19 @@
             };
             const MOB_TYPES = Object.keys(MOB_PROPERTIES);
             
+            // (수정) 업그레이드 풀 (v6.1 기준)
             const UPGRADE_POOL = [
-                { id: 'gauge_1', title: '숙주 안정화 I', desc: '빙의 게이지 총량이 20% 증가합니다.', apply: () => player.stats.maxGaugeMult += 0.20 }, // (수정) 0.15 -> 0.20
-                { id: 'wisp_speed_1', title: '유령 기동력 I', desc: '유령 상태의 이동 속도가 20% 증가합니다.', apply: () => player.stats.wispSpeedMult += 0.20 }, // (수정) 0.1 -> 0.2
+                { id: 'gauge_1', title: '숙주 안정화 I', desc: '빙의 게이지 총량이 20% 증가합니다.', apply: () => player.stats.maxGaugeMult += 0.20 },
+                { id: 'wisp_speed_1', title: '유령 기동력 I', desc: '유령 상태의 이동 속도가 20% 증가합니다.', apply: () => player.stats.wispSpeedMult += 0.20 },
                 { id: 'jump_nova', title: '소울 노바', desc: '새로운 숙주로 \'빙의\'할 때 주변에 폭발을 일으킵니다.', apply: () => player.stats.jumpNova = true },
-                { id: 'attack_speed_1', title: '공격 속도 I', desc: '숙주의 공격 속도가 20% 증가합니다.', apply: () => player.stats.attackSpeedMult += 0.20 }, // (수정) 0.1 -> 0.2
+                { id: 'attack_speed_1', title: '공격 속도 I', desc: '숙주의 공격 속도가 20% 증가합니다.', apply: () => player.stats.attackSpeedMult += 0.20 },
                 { id: 'core_hp_1', title: '영혼 핵 강화 I', desc: '영혼 핵의 최대 HP가 20% 증가합니다.', apply: () => {soulCore.maxHp *= 1.2; soulCore.heal(soulCore.maxHp * 0.2);} },
                 { id: 'elite_chance_1', title: '불안정한 영혼', desc: '엘리트 몬스터 등장 확률이 5% 증가합니다.', apply: () => eliteSpawnChance += 0.05 },
                 { id: 'bone_damage_1', title: '날카로운 뼈 I', desc: '스켈레톤의 뼈 데미지가 1 증가합니다.', apply: () => player.stats.boneDamage += 1 },
                 { id: 'sonic_damage_1', title: '초음파 강화 I', desc: '박쥐의 초음파 데미지가 1 증가합니다.', apply: () => player.stats.sonicDamage += 1 },
-                { id: 'aura_size_1', title: '부패 오라 확장 I', desc: '좀비의 오라 범위가 30% 증가합니다.', apply: () => player.stats.auraSizeMult += 0.30 }, // (수정) 0.15 -> 0.30
+                { id: 'aura_size_1', title: '부패 오라 확장 I', desc: '좀비의 오라 범위가 30% 증가합니다.', apply: () => player.stats.auraSizeMult += 0.30 },
                 { id: 'imp_damage_1', title: '지옥불 I', desc: '임프의 파이어볼 데미지가 2 증가합니다.', apply: () => player.stats.fireballDamage += 2 },
                 { id: 'slime_slow_1', title: '강력 접착액', desc: '슬라임볼에 맞은 적이 1초간 느려집니다.', apply: () => player.stats.slimeSlow = true },
-                // (새로 추가) Plan 2
                 { id: 'pierce_1', title: '영혼 관통', desc: '모든 투사체가 적 1명을 관통합니다.', apply: () => player.stats.pierce += 1 },
                 { id: 'multi_shot_1', title: '분열된 영혼', desc: '투사체 +1 (스켈레톤, 박쥐, 임프)', apply: () => player.stats.multiShot += 1 },
                 { id: 'cooldown_1', title: '가속화', desc: '모든 숙주 스킬 쿨다운이 15% 감소합니다.', apply: () => player.stats.cooldownMult += 0.15 },
@@ -556,7 +557,7 @@
                     this.unpossessTimer = 0;
                     this.level = 1;
                     this.experience = 0;
-                    this.expToNextLevel = 100;
+                    this.expToNextLevel = 50; // (수정) 100 -> 50
                     
                     this.dashTarget = null; 
                     
@@ -564,15 +565,15 @@
                         maxGaugeMult: 1.0,
                         wispSpeedMult: 1.0,
                         attackSpeedMult: 1.0,
-                        cooldownMult: 0.0, // (새로 추가)
+                        cooldownMult: 0.0, 
                         jumpNova: false,
                         auraSizeMult: 1.0,
                         boneDamage: 1,
                         sonicDamage: 1,
                         fireballDamage: 2,
                         slimeSlow: false,
-                        pierce: 0, // (새로 추가)
-                        multiShot: 0, // (새로 추가)
+                        pierce: 0, 
+                        multiShot: 0, 
                     };
                 }
 
@@ -657,16 +658,17 @@
                 attack() {
                     if (!this.hostType) return;
                     const props = MOB_PROPERTIES[this.hostType];
-                    // (수정) 쿨다운 계산에 2개 스탯 적용
                     const attackCooldown = props.attackCooldown / (1.0 + this.stats.attackSpeedMult + this.stats.cooldownMult);
                     this.attackTimer = Math.max(10, attackCooldown); 
                     
                     const target = findNearestEnemy(this.x, this.y);
                     
-                    // (수정) 멀티샷 로직
-                    const numProjectiles = 1 + this.stats.multiShot + (this.isEliteHost && (this.hostType === 'skeleton' || this.hostType === 'bat' || this.hostType === 'imp') ? 2 : 0);
-                    const angleStep = 0.2; // 샷 간의 각도
-                    const startAngle = (target ? Math.atan2(target.y - this.y, target.x - this.x) : 0) - (angleStep * (numProjectiles - 1)) / 2;
+                    const numProjectiles = 1 + this.stats.multiShot; // 엘리트 멀티샷은 별도
+                    const isEliteMulti = this.isEliteHost && (this.hostType === 'skeleton' || this.hostType === 'bat' || this.hostType === 'imp');
+                    const totalProjectiles = isEliteMulti ? numProjectiles + 2 : numProjectiles; // 엘리트는 +2
+                    
+                    const angleStep = 0.2; 
+                    const startAngle = (target ? Math.atan2(target.y - this.y, target.x - this.x) : 0) - (angleStep * (totalProjectiles - 1)) / 2;
 
                     switch (this.hostType) {
                         case 'skeleton':
@@ -680,7 +682,7 @@
                                 else if(this.hostType === 'imp') { type = 'fireball'; damage = this.stats.fireballDamage; }
                                 else if(this.hostType === 'slime') { type = 'slimeball'; damage = 1; }
 
-                                for(let i=0; i<numProjectiles; i++) {
+                                for(let i=0; i<totalProjectiles; i++) {
                                     const currentAngle = startAngle + i * angleStep;
                                     projectiles.push(new Projectile(this.x, this.y, null, type, damage, { dx: Math.cos(currentAngle), dy: Math.sin(currentAngle) }, this.stats.slimeSlow));
                                 }
@@ -696,7 +698,7 @@
                             });
                             break;
                         case 'gargoyle': 
-                            const stompRadius = 105; // (수정) 70 -> 105 (1.5배)
+                            const stompRadius = 105; 
                             particles.push(new Particle(this.x, this.y, 0, 0, 15, '#888888', 'shockwave', stompRadius));
                             enemies.forEach(enemy => {
                                 if (Math.hypot(this.x - enemy.x, this.y - enemy.y) < stompRadius) {
@@ -711,16 +713,14 @@
                     if (this.dashCooldown > 0) return; 
                     
                     if (this.state === 'HOST') {
-                        // (수정) 자유로운 빙의 해제
-                        this.dashCooldown = 30; // 0.5초 쿨타임
+                        this.dashCooldown = 30; 
                         this.unpossess();
                     } else if (this.state === 'WISP') {
-                        // (수정) 돌진 시작
                         let closestEnemy = findNearestEnemy(this.x, this.y, 150); 
                         if (closestEnemy) {
                             this.state = 'DASHING';
                             this.dashTarget = closestEnemy;
-                            this.dashCooldown = 60; // 돌진 쿨타임
+                            this.dashCooldown = 60; 
                         }
                     }
                 }
@@ -790,7 +790,7 @@
                         upgradeCards[i].querySelector('p').textContent = currentUpgradeChoices[i].desc;
                     }
                     levelUpOverlay.classList.add('visible');
-                    infoButton.style.display = 'none'; // 레벨업 시 정보 버튼 숨기기
+                    infoButton.style.display = 'none'; 
                     
                     if (this.experience >= this.expToNextLevel) {
                         this.experience = this.expToNextLevel - 1; 
@@ -805,8 +805,18 @@
                     this.type = type;
                     this.isElite = isElite; 
                     this.props = MOB_PROPERTIES[type];
-                    this.hp = this.props.hp * (isElite ? 2 : 1) + (isElite ? 10 : 0); // (수정) 엘리트 HP 보너스
-                    this.hp = Math.ceil(this.hp * (1 + (gameTime / 120) * 0.5)); // (수정) 시간 비례 HP
+                    
+                    // --- (새로운 HP 계산 로직) ---
+                    // 1. 시간에 따른 기본 배율 (3분(180초)마다 50%씩 증가)
+                    const timeMultiplier = 1 + (gameTime / 180) * 0.5;
+                    // 2. 기본 HP (엘리트는 2배)
+                    let baseHp = this.props.hp * (isElite ? 2 : 1);
+                    // 3. (중요) 엘리트 몬스터의 초반 체력 보너스
+                    const eliteFlatHpBoost = isElite ? 5 : 0; // (수정) 10 -> 5
+                    
+                    this.hp = Math.ceil((baseHp + eliteFlatHpBoost) * timeMultiplier);
+                    // --- (여기까지) ---
+                    
                     this.radius = 8 * PIXEL_SCALE * (isElite ? 1.5 : 1); 
                     this.color = this.props.color;
                     this.sprite = this.props.sprite;
@@ -826,7 +836,6 @@
                     ctx.shadowBlur = 0;
                 }
                 update() {
-                    // (수정) 몹 AI: 숙주/핵 중 가까운 곳 공격
                     let target = soulCore;
                     const distToCore = Math.hypot(soulCore.x - this.x, soulCore.y - this.y);
                     
@@ -874,7 +883,7 @@
                     this.radius = 2 * PIXEL_SCALE;
                     this.speed = 5;
                     this.life = 60; 
-                    this.pierceCount = player.stats.pierce; // (새로 추가)
+                    this.pierceCount = player.stats.pierce; 
                     
                     if (type === 'sonic') this.speed = 8;
                     if (type === 'slimeball') this.speed = 3;
@@ -890,7 +899,7 @@
                         this.radius = 50;
                         this.life = 10; 
                         this.dx = 0; this.dy = 0;
-                        this.hitEnemies = []; // (새로 추가)
+                        this.hitEnemies = []; 
                     } else if (target) {
                         const dx = target.x - this.x;
                         const dy = target.y - this.y;
@@ -955,7 +964,7 @@
                     this.value = value;
                     this.radius = 2 * PIXEL_SCALE; // (수정) 3 -> 2
                     this.color = '#FFFF00'; 
-                    this.pickupRadius = 60;
+                    this.pickupRadius = 120; // (수정) 60 -> 120
                 }
                 draw() {
                     ctx.fillStyle = this.color;
@@ -1170,8 +1179,8 @@
                     x: VIEWPORT_WIDTH / 2, 
                     y: VIEWPORT_HEIGHT / 2, 
                     radius: 10 * PIXEL_SCALE, 
-                    hp: 100, 
-                    maxHp: 100,
+                    hp: 150, // (수정) 100 -> 150
+                    maxHp: 150, // (수정) 100 -> 150
                     heal(amount) {
                         this.hp = Math.min(this.maxHp, this.hp + amount);
                         updateCoreHpBar();
@@ -1221,8 +1230,8 @@
                     nextSpawnFrame = frameCount + spawnInterval;
                 }
                 
-                // 20초마다 난이도 상승
-                if (frameCount % 1200 === 0 && frameCount > 0) { 
+                // 30초마다 난이도 상승 (수정)
+                if (frameCount % 1800 === 0 && frameCount > 0) { 
                     spawnInterval = Math.max(30, spawnInterval * 0.9); 
                     waveCount = Math.min(10, waveCount + 1); 
                 }
@@ -1276,7 +1285,7 @@
                             e.takeDamage(p.damage);
                             if (p.slow) e.slowTimer = 60; // 1초 슬로우
                             
-                            // (새로 추가) 임프 파이어볼 적중 시 폭발
+                            // 임프 파이어볼 적중 시 폭발
                             if (p.type === 'fireball') {
                                 projectiles.push(new Projectile(p.x, p.y, null, 'explosion', Math.floor(p.damage / 2)));
                             }
