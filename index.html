@@ -556,7 +556,7 @@
                     this.unpossessTimer = 0;
                     this.level = 1;
                     this.experience = 0;
-                    this.expToNextLevel = 100;
+                    this.expToNextLevel = 50;
                     
                     this.dashTarget = null; // (새로 추가)
                     
@@ -1241,7 +1241,7 @@
                 }
                 
                 // 20초마다 난이도 상승
-                if (frameCount % 1200 === 0 && frameCount > 0) { 
+                if (frameCount % 1800 === 0 && frameCount > 0) { 
                     spawnInterval = Math.max(30, spawnInterval * 0.9); 
                     waveCount = Math.min(10, waveCount + 1); 
                 }
